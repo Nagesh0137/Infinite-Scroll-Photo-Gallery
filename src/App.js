@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import Gallery from "./components/Gallery";
 import "./App.css";
@@ -10,7 +10,7 @@ const App = () => {
   const [error, setError] = useState(false);
   const cache = useRef({}); // Cache fetched photos
 
-  const fetchPhotos = async () => {
+  const fetchPhotos = useCallback(async () => {
     setLoading(true);
     setError(false);
 
@@ -37,13 +37,13 @@ const App = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page]); // useCallback ensures fetchPhotos is memoized and only changes when 'page' changes
 
   useEffect(() => {
     fetchPhotos();
-  }, [page]);
+  }, [page, fetchPhotos]); // Added fetchPhotos to the dependency array
 
-  const handleScroll = () => {
+  const handleScroll = useCallback(() => {
     if (
       window.innerHeight + document.documentElement.scrollTop >=
       document.documentElement.offsetHeight - 100 &&
@@ -51,12 +51,12 @@ const App = () => {
     ) {
       setPage((prevPage) => prevPage + 1);
     }
-  };
+  }, [loading]); // useCallback ensures handleScroll is memoized and only changes when 'loading' changes
 
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [loading]);
+  }, [handleScroll]); // Added handleScroll to the dependency array
 
   return (
     <div className="app">
@@ -67,7 +67,6 @@ const App = () => {
       <Gallery photos={photos} />
       {loading && <div className="loading">Loading...</div>}
     </div>
-
   );
 };
 
